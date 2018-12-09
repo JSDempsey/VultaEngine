@@ -49,7 +49,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Delta\Documents\Visual Studio 2017\Libraries\stb_image;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\glm;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Delta\Documents\Visual Studio 2017\Libraries\tiny_obj_loader;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\stb_image;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\glm;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -65,7 +65,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Delta\Documents\Visual Studio 2017\Libraries\stb_image;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\glm;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Delta\Documents\Visual Studio 2017\Libraries\tiny_obj_loader;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\stb_image;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\glm;C:\Users\Delta\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
