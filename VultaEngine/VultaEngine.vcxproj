@@ -76,12 +76,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera\Camera.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="VulkanRenderer\VulkanRender.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\compile.bat" />
     <None Include="Shaders\fragmentShader.frag" />
     <None Include="Shaders\vertexShader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera\Camera.h" />
+    <ClInclude Include="VulkanRenderer\VulkanRender.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
