@@ -75,7 +75,7 @@ void cleanupSwapChain();
 
 bool checkValidationLayerSupport();
 std::vector<const char*> getRequiredExtensions();
-bool isDeviceSuitable(VkPhysicalDevice device);
+int isDeviceSuitable(VkPhysicalDevice device);
 VkSampleCountFlagBits getMaxUsableSampleCount();
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 bool checkDeviceExtensionSupport(VkPhysicalDevice device);

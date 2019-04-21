@@ -71,6 +71,11 @@ struct Vertex {
 	}
 };
 
+struct compatibleDevices {
+	int score;
+	VkPhysicalDevice device;
+};
+
 namespace std {
 	template<> struct hash<Vertex> {
 		size_t operator()(Vertex const& vertex) const {
@@ -328,26 +333,50 @@ void pickPhysicalDevice() {
 	std::vector<VkPhysicalDevice> devices(deviceCount);
 	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 	std::cout << "GPUs found: " << deviceCount << std::endl;
+
+	std::vector<compatibleDevices> usableGPUs;
+
 	for (const auto& device : devices) {
-		if (isDeviceSuitable(device)) {
-			physicalDevice = device;
+		int deviceScore = isDeviceSuitable(device);
+		if (deviceScore >= 1) {
+			compatibleDevices tempDevice;
+			tempDevice.score = deviceScore;
+			tempDevice.device = device;
+			usableGPUs.push_back(tempDevice);
+		}
+	}
+
+	int bestGPUScore = 0;
+	for (int i = 0; i < usableGPUs.size(); i++) {
+		if (usableGPUs[i].score > bestGPUScore) {
+			bestGPUScore = usableGPUs[i].score;
+		}
+	}
+
+	for (int i = 0; i < usableGPUs.size(); i++) {
+		if (usableGPUs[i].score == bestGPUScore) {
+			physicalDevice = usableGPUs[i].device;
 			msaaSamples = getMaxUsableSampleCount();
-			std::cout << "Device is suitable!" << std::endl;
+			VkPhysicalDeviceProperties deviceProperties;
+			vkGetPhysicalDeviceProperties(usableGPUs[i].device, &deviceProperties);
+			std::cout << "Device '" << deviceProperties.deviceName << "' with a score of " << usableGPUs[i].score << " selected!" << std::endl;
 			std::cout << "Max MSAA is " << msaaSamples << "x" << std::endl;
 			break;
 		}
 	}
+
 	if (physicalDevice == VK_NULL_HANDLE) {
 		throw std::runtime_error("failed to find a suitable GPU!");
 	}
 }
 
-bool isDeviceSuitable(VkPhysicalDevice device) {
+int isDeviceSuitable(VkPhysicalDevice device) {
+	int score = 0;
+
 	VkPhysicalDeviceProperties deviceProperties;
 	vkGetPhysicalDeviceProperties(device, &deviceProperties);
 	VkPhysicalDeviceFeatures deviceFeatures;
 	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-	std::cout << "Found GPU: " << deviceProperties.deviceName << std::endl;
 
 	QueueFamilyIndices indices = findQueueFamilies(device);
 
@@ -362,7 +391,22 @@ bool isDeviceSuitable(VkPhysicalDevice device) {
 	VkPhysicalDeviceFeatures supportedFeatures;
 	vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-	return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+	//necessary features
+	if (indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy) {
+		score += 1;
+	}
+
+	//score the GPUs based on dedicated or integrated properties
+	if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+		score += 2;
+	}
+	else if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
+		score += 1;
+	}
+
+	std::cout << "Found GPU: " << deviceProperties.deviceName << " - Score: " << score  << std::endl;
+
+	return score;
 }
 
 bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
