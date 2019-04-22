@@ -39,10 +39,6 @@ public:
 	static void setFramebufferResized();
 	void cleanup();
 
-	//TODO IMPLEMENT THESE
-	void loadModel();
-	void createTextureImage();//???
-
 	static void debugHaltClose();
 };
 
@@ -60,10 +56,10 @@ void createCommandPool();
 void createColorResources();
 void createDepthResources();
 void createFrameBuffers();
-void createTextureImage();
-void createTextureImageView();
+void createTextureImage(bool original);
+void createTextureImageView(bool original);
 void createTextureSampler();
-void loadModel();
+void loadModel(bool original);
 void createVertexBuffer();
 void createIndexBuffer();
 void createUniformBuffer();
@@ -93,4 +89,4 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 VkCommandBuffer beginSingleTimeCommands();
 void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-void updateUniformBuffer(uint32_t currentImage);
+void updateUniformBuffer(uint32_t currentImage, bool original);

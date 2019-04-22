@@ -11,7 +11,7 @@ struct UniformBufferObject {
 
 class VECamera {
 public:
-	static UniformBufferObject updateCamera(float swapchainWidth, float swapchainHeight);
+	static void updateCamera(float swapchainWidth, float swapchainHeight, UniformBufferObject *ubo);
 	static void processInput(GLFWwindow *window);
 	static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 	static void setDeltaTime(float deltaTime);
