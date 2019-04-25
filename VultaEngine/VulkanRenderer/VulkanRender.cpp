@@ -630,7 +630,7 @@ void createDescriptorSetLayout() {
 	VkDescriptorSetLayoutBinding uboLayoutBinding = {};
 	uboLayoutBinding.binding = 0;
 	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.descriptorCount = 1;
+	uboLayoutBinding.descriptorCount = 2;
 	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
@@ -758,13 +758,17 @@ void createGraphicsPipeline() {
 	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
 
-	VkPushConstantRange pushConstantRange;
-	pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-	pushConstantRange.size = sizeof(int);
-	pushConstantRange.offset = 0;
+	VkPushConstantRange pushConstantRanges[2];
+	pushConstantRanges[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	pushConstantRanges[0].size = sizeof(int);
+	pushConstantRanges[0].offset = 0;
 
-	pipelineLayoutInfo.pushConstantRangeCount = 1;
-	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+	pushConstantRanges[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	pushConstantRanges[1].size = sizeof(glm::mat4);
+	pushConstantRanges[1].offset = 0;
+
+	pipelineLayoutInfo.pushConstantRangeCount = 2;
+	pipelineLayoutInfo.pPushConstantRanges = pushConstantRanges;
 
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create pipeline layout!");
@@ -946,9 +950,9 @@ void createUniformBuffer() {
 void createDescriptorPool() {
 	std::array<VkDescriptorPoolSize, 2> poolSizes = {};
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+	poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size()) * 2; //multiply these by 2 because 2 objects
 	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+	poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size()) * 2;
 
 	VkDescriptorPoolCreateInfo poolInfo = {};	
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -977,10 +981,14 @@ void createDescriptorSets() {
 	}
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
-		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = uniformBuffers[i];
-		bufferInfo.offset = 0;
-		bufferInfo.range = UBOSize;
+		VkDescriptorBufferInfo bufferInfo[2];
+		bufferInfo[0].buffer = uniformBuffers[i];
+		bufferInfo[0].offset = 0;
+		bufferInfo[0].range = UBOSize;
+
+		bufferInfo[1].buffer = uniformBuffers[i];
+		bufferInfo[1].offset = 0;
+		bufferInfo[1].range = UBOSize;
 
 		VkDescriptorImageInfo imageInfoArray[2];
 		imageInfoArray[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -998,8 +1006,8 @@ void createDescriptorSets() {
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = 1;
-		descriptorWrites[0].pBufferInfo = &bufferInfo;
+		descriptorWrites[0].descriptorCount = 2;
+		descriptorWrites[0].pBufferInfo = bufferInfo;
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[1].dstSet = descriptorSets[i];
@@ -1650,12 +1658,14 @@ void createCommandBuffers() {
 		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
 		currentTextureImage = 0;
 		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), (void*)&currentTextureImage);
+		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), (void*)&currentTextureImage);
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers1, offsets);
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer1, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indicesHouse.size()), 1, 0, 0, 0);
 
 		currentTextureImage = 1;
 		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), (void*)&currentTextureImage);
+		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), (void*)&currentTextureImage);
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers2, offsets);
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer2, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indicesCube.size()), 1, 0, 0, 0);
@@ -1702,7 +1712,7 @@ void VEVulkanRender::drawFrame() {
 		throw std::runtime_error("failed to acquire swap chain image!");
 	}
 
-	updateUniformBuffer(imageIndex, true);
+	updateUniformBuffer(imageIndex);
 
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1742,23 +1752,20 @@ void VEVulkanRender::drawFrame() {
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void updateUniformBuffer(uint32_t currentImage, bool original) {
+void updateUniformBuffer(uint32_t currentImage) {
 	static auto startTime = std::chrono::high_resolution_clock::now();
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 	UniformBufferObject ubo = {};
-	if (original) {
-		//ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, housePos);
-		ubo.model = model;
-	}
-	else {
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, cubePos);
-		ubo.model = model;
-	}
+	//ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, housePos);
+	ubo.model[0] = model;
+
+	glm::mat4 model1 = glm::mat4(1.0f);
+	model1 = glm::translate(model1, cubePos);
+	ubo.model[1] = model1;
 	//ubo.model = glm::mat4(1.0f);
 
 	VECamera::updateCamera((float)swapChainExtent.width, (float)swapChainExtent.height, &ubo);

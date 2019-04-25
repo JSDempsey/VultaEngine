@@ -89,7 +89,7 @@ void VECamera::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void VECamera::updateCamera(float swapchainWidth, float swapchainHeight, UniformBufferObject *ubo) {
 	ubo->view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-	ubo->proj = glm::perspective(glm::radians(70.0f), swapchainWidth / swapchainHeight, 0.1f, 10.0f);
+	ubo->proj = glm::perspective(glm::radians(70.0f), swapchainWidth / swapchainHeight, 0.1f, 100.0f);
 	ubo->proj[1][1] *= -1;
 }
 
