@@ -1,8 +1,6 @@
 #include "VulkanRenderer/VulkanRender.h"
 #include "Camera/Camera.h"
-
-const int WIDTH = 800;
-const int HEIGHT = 600;
+#include "main.h"
 
 float lastFrame = 0.0f;
 int lastSecond = 0;

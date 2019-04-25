@@ -27,6 +27,7 @@ const bool enableValidationLayers = false;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 //TEMP
+int currentModel = 0;
 const std::string MODEL_PATH = "Models/chalet.obj";
 const std::string TEXTURE_PATH = "Textures/chalet.jpg";
 const glm::vec3 housePos = { 0.0f,5.0f,5.0f };
@@ -165,7 +166,6 @@ std::vector<VkSemaphore> imageAvailableSemaphores;
 std::vector<VkSemaphore> renderFinishedSemaphores;
 std::vector<VkFence> inFlightFences;
 size_t currentFrame = 0;
-int currentTextureImage = 0;
 
 VkDeviceMemory textureImageMemory;
 VkImage depthImage;
@@ -630,7 +630,7 @@ void createDescriptorSetLayout() {
 	VkDescriptorSetLayoutBinding uboLayoutBinding = {};
 	uboLayoutBinding.binding = 0;
 	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.descriptorCount = 2;
+	uboLayoutBinding.descriptorCount = 1;
 	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
@@ -764,7 +764,7 @@ void createGraphicsPipeline() {
 	pushConstantRanges[0].offset = 0;
 
 	pushConstantRanges[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	pushConstantRanges[1].size = sizeof(glm::mat4);
+	pushConstantRanges[1].size = sizeof(int);
 	pushConstantRanges[1].offset = 0;
 
 	pipelineLayoutInfo.pushConstantRangeCount = 2;
@@ -950,7 +950,7 @@ void createUniformBuffer() {
 void createDescriptorPool() {
 	std::array<VkDescriptorPoolSize, 2> poolSizes = {};
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size()) * 2; //multiply these by 2 because 2 objects
+	poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
 	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size()) * 2;
 
@@ -981,14 +981,10 @@ void createDescriptorSets() {
 	}
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
-		VkDescriptorBufferInfo bufferInfo[2];
-		bufferInfo[0].buffer = uniformBuffers[i];
-		bufferInfo[0].offset = 0;
-		bufferInfo[0].range = UBOSize;
-
-		bufferInfo[1].buffer = uniformBuffers[i];
-		bufferInfo[1].offset = 0;
-		bufferInfo[1].range = UBOSize;
+		VkDescriptorBufferInfo bufferInfo;
+		bufferInfo.buffer = uniformBuffers[i];
+		bufferInfo.offset = 0;
+		bufferInfo.range = UBOSize;
 
 		VkDescriptorImageInfo imageInfoArray[2];
 		imageInfoArray[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1006,8 +1002,8 @@ void createDescriptorSets() {
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = 2;
-		descriptorWrites[0].pBufferInfo = bufferInfo;
+		descriptorWrites[0].descriptorCount = 1;
+		descriptorWrites[0].pBufferInfo = &bufferInfo;
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[1].dstSet = descriptorSets[i];
@@ -1656,16 +1652,14 @@ void createCommandBuffers() {
 		VkDeviceSize offsets[] = { 0 };
 
 		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
-		currentTextureImage = 0;
-		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), (void*)&currentTextureImage);
-		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), (void*)&currentTextureImage);
+		currentModel = 0;
+		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), (void*)&currentModel);
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers1, offsets);
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer1, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indicesHouse.size()), 1, 0, 0, 0);
 
-		currentTextureImage = 1;
-		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), (void*)&currentTextureImage);
-		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), (void*)&currentTextureImage);
+		currentModel = 1;
+		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), (void*)&currentModel);
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers2, offsets);
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer2, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indicesCube.size()), 1, 0, 0, 0);

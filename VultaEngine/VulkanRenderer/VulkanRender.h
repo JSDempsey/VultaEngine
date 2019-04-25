@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <optional>
 #include <vector>
+#include "../main.h"
 
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
@@ -40,6 +41,12 @@ public:
 	void cleanup();
 
 	static void debugHaltClose();
+};
+
+struct UniformBufferObject {
+	glm::mat4 model[gameObjects];
+	glm::mat4 view;
+	glm::mat4 proj;
 };
 
 void createInstance();

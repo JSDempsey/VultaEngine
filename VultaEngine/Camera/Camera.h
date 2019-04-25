@@ -2,12 +2,7 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
-struct UniformBufferObject {
-	glm::mat4 model[2];
-	glm::mat4 view;
-	glm::mat4 proj;
-};
+#include "../VulkanRenderer/VulkanRender.h"
 
 class VECamera {
 public:
