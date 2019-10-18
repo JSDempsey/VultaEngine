@@ -167,7 +167,10 @@ std::vector<VkSemaphore> renderFinishedSemaphores;
 std::vector<VkFence> inFlightFences;
 size_t currentFrame = 0;
 
-VkDeviceMemory textureImageMemory;
+VkDeviceMemory textureImageMemory1;
+VkDeviceMemory textureImageMemory2;
+
+
 VkImage depthImage;
 VkDeviceMemory depthImageMemory;
 VkImage colorImage;
@@ -765,7 +768,7 @@ void createGraphicsPipeline() {
 
 	pushConstantRanges[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 	pushConstantRanges[1].size = sizeof(int);
-	pushConstantRanges[1].offset = 0;
+	pushConstantRanges[1].offset = sizeof(int);
 
 	pipelineLayoutInfo.pushConstantRangeCount = 2;
 	pipelineLayoutInfo.pPushConstantRanges = pushConstantRanges;
@@ -1081,7 +1084,7 @@ void createTextureImage(bool original) {
 	stbi_image_free(pixels);
 
 	if (original) {
-		createImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage1, textureImageMemory);
+		createImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage1, textureImageMemory1);
 		transitionImageLayout(textureImage1, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
 		copyBufferToImage(stagingBuffer, textureImage1, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 
@@ -1090,7 +1093,7 @@ void createTextureImage(bool original) {
 		generateMipmaps(textureImage1, VK_FORMAT_R8G8B8A8_UNORM, texWidth, texHeight, mipLevels);
 	}
 	else {
-		createImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage2, textureImageMemory);
+		createImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage2, textureImageMemory2);
 		transitionImageLayout(textureImage2, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
 		copyBufferToImage(stagingBuffer, textureImage2, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 
@@ -1653,13 +1656,15 @@ void createCommandBuffers() {
 
 		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
 		currentModel = 0;
-		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), (void*)&currentModel);
+		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), (void*)&currentModel);
+		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(int), sizeof(int), (void*)&currentModel);
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers1, offsets);
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer1, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indicesHouse.size()), 1, 0, 0, 0);
 
 		currentModel = 1;
-		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), (void*)&currentModel);
+		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), (void*)&currentModel);
+		vkCmdPushConstants(commandBuffers[i], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(int), sizeof(int), (void*)&currentModel);
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers2, offsets);
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer2, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indicesCube.size()), 1, 0, 0, 0);
@@ -1804,13 +1809,15 @@ void VEVulkanRender::cleanup() {
 	vkDestroyImage(device, textureImage1, nullptr);
 	vkDestroyImageView(device, textureImageView2, nullptr);
 	vkDestroyImage(device, textureImage2, nullptr);
-	vkFreeMemory(device, textureImageMemory, nullptr);
+	vkFreeMemory(device, textureImageMemory1, nullptr);
+	vkFreeMemory(device, textureImageMemory2, nullptr);
 	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr); 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
 		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
 		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 	}
+	
 	vkDestroyBuffer(device, indexBuffer1, nullptr);
 	vkFreeMemory(device, indexBufferMemory1, nullptr);
 	vkDestroyBuffer(device, indexBuffer2, nullptr);
@@ -1825,6 +1832,7 @@ void VEVulkanRender::cleanup() {
 		vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
 		vkDestroyFence(device, inFlightFences[i], nullptr);
 	}
+
 	vkDestroyCommandPool(device, commandPool, nullptr);
 	vkDestroyDevice(device, nullptr);
 	if (enableValidationLayers) {

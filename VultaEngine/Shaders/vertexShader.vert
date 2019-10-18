@@ -16,7 +16,7 @@ layout(location = 1) out vec2 fragTexCoord;
 
 layout(push_constant) uniform PER_OBJECT 
 { 
-	int posIdx;
+	layout(offset = 4) int posIdx;
 }pc;
 
 out gl_PerVertex {
