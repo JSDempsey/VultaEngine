@@ -87,15 +87,10 @@ void VECamera::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	cameraFront = glm::normalize(front);
 }
 
-UniformBufferObject VECamera::updateCamera(float swapchainWidth, float swapchainHeight) {
-	UniformBufferObject ubo = {};
-	//ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.model = glm::mat4(1.0f);
-	ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-	ubo.proj = glm::perspective(glm::radians(70.0f), swapchainWidth / swapchainHeight, 0.1f, 10.0f);
-	ubo.proj[1][1] *= -1;
-
-	return ubo;
+void VECamera::updateCamera(float swapchainWidth, float swapchainHeight, UniformBufferObject *ubo) {
+	ubo->view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+	ubo->proj = glm::perspective(glm::radians(70.0f), swapchainWidth / swapchainHeight, 0.1f, 100.0f);
+	ubo->proj[1][1] *= -1;
 }
 
 int VECamera::getUBOSize() {
