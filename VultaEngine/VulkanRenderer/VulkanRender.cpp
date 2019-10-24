@@ -93,7 +93,8 @@ namespace std {
 }
 
 const std::vector<const char*> validationLayers = {
-	"VK_LAYER_LUNARG_standard_validation"
+	"VK_LAYER_LUNARG_standard_validation",
+	"VK_LAYER_LUNARG_monitor"
 };
 const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -281,14 +282,22 @@ bool checkValidationLayerSupport() {
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
+	std::cout << "Finding layers..." << std::endl;
+
+	int layerIteration = 0;
 	for (const char* layerName : validationLayers) {
 		bool layerFound = false;
 		for (const auto& layerProperties : availableLayers) {
+			if (layerIteration == 0) {
+				std::cout << "Found layer: " << layerProperties.layerName << std::endl;
+			}
 			if (strcmp(layerName, layerProperties.layerName) == 0) {
+				std::cout << "Enabled layer: " << layerProperties.layerName << std::endl;
 				layerFound = true;
 				break;
 			}
 		}
+		layerIteration++;
 		if (!layerFound) {
 			return false;
 		}

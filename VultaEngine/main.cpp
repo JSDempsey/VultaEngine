@@ -3,8 +3,6 @@
 #include "main.h"
 
 float lastFrame = 0.0f;
-int lastSecond = 0;
-int fps = 0;
 
 class VultaEngine {
 public:
@@ -45,13 +43,6 @@ private:
 			VECamera::processInput(window);
 			glfwPollEvents();
 			vulkanRenderer.drawFrame();
-
-			if (round(currentFrame) != lastSecond) {
-				std::cout << fps << " FPS" << std::endl;
-				lastSecond = (int)round(currentFrame);
-				fps = 0;
-			}
-			fps++;
 		}
 	}
 };
